@@ -212,7 +212,6 @@ I had considered using react-dnd, but its drag-and-drop effects weren't smooth o
 - 📱 Touch gestures support
 - 🔔 Toast notifications
 - 🚀 Fast refresh in development
-- 🐳 Docker support for production deployment
 
 ## Demo
 
