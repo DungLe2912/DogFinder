@@ -1,13 +1,15 @@
-import { Outlet } from "react-router-dom";
-import Header from "./components/Header";
+import { Outlet } from "react-router-dom"
+import Header from "./components/Header"
 
 const App = () => {
   return (
-    <div>
+    <div className="min-h-screen">
       <Header />
-      <Outlet />
+      <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <Outlet />
+      </main>
     </div>
-  );
-};
+  )
+}
 
-export default App;
+export default App

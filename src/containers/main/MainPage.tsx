@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useSpring, animated } from "@react-spring/web"
 import { useDrag } from "@use-gesture/react"
 import { useNavigate } from "react-router-dom"
+import { History } from "lucide-react"
 
 import type { TDirection } from "../../types/card"
 import type { TBreed } from "../../types/breed"
@@ -304,7 +305,7 @@ const DogFinderMain = () => {
   )
 
   const handleDetails = () => {
-    navigate(`/dogs/${currentBreed.id}`, {
+    navigate(`/dogs/${currentBreed?.reference_image_id}`, {
       state: { breed: currentBreed }
     })
   }
@@ -315,9 +316,21 @@ const DogFinderMain = () => {
   const superLikeOpacity = y.to((val) => (val < 0 ? Math.min(Math.abs(val) / 100, 1) : 0))
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-purple-100 via-pink-100 to-blue-100 flex flex-col">
+    <div className="min-h-screen bg-linear-to-br from-purple-100 via-pink-100 to-blue-100 flex flex-col -mx-4 sm:-mx-6 lg:-mx-8">
+      {/* Header with History Button */}
+      <div className="flex justify-end px-4 sm:px-6 lg:px-8 pt-4">
+        <button
+          onClick={() => navigate("/history")}
+          className="flex items-center gap-2 rounded-full bg-white px-4 py-2 font-medium text-purple-600 shadow-md transition-all hover:bg-purple-50 hover:shadow-lg"
+          aria-label="View vote history"
+        >
+          <History size={20} />
+          <span className="hidden sm:inline">History</span>
+        </button>
+      </div>
+
       {/* Main Content */}
-      <main className="flex-1 flex items-start justify-center p-3 sm:p-6 lg:p-8">
+      <main className="flex-1 flex items-start justify-center px-4 sm:px-6 lg:px-8 py-3">
         <div className="w-125 max-w-2xl relative">
           {loading ? (
             <div className="flex items-center justify-center h-125 sm:h-150">

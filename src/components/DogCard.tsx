@@ -1,20 +1,20 @@
-import type { Interpolation } from "@react-spring/web";
+import type { Interpolation } from "@react-spring/web"
 
-import type { TBreed } from "../types/breed";
-import SwipeIndicators from "./SwipeIndicators";
-import { useState } from "react";
-import NoImage from "./NoImage";
+import type { TBreed } from "../types/breed"
+import SwipeIndicators from "./SwipeIndicators"
+import { useState } from "react"
+import NoImage from "./NoImage"
 
 interface DogCardProps {
-  dog: TBreed;
-  imageLoaded: boolean;
-  onImageLoad: () => void;
-  onImageError: () => void;
-  onDetails: () => void;
-  likeOpacity?: Interpolation<number, number>;
-  nopeOpacity?: Interpolation<number, number>;
-  superLikeOpacity?: Interpolation<number, number>;
-  showIndicators?: boolean;
+  dog: TBreed
+  imageLoaded: boolean
+  onImageLoad: () => void
+  onImageError: () => void
+  onDetails: () => void
+  likeOpacity?: Interpolation<number, number>
+  nopeOpacity?: Interpolation<number, number>
+  superLikeOpacity?: Interpolation<number, number>
+  showIndicators?: boolean
 }
 
 const DogCard = ({
@@ -26,22 +26,19 @@ const DogCard = ({
   likeOpacity,
   nopeOpacity,
   superLikeOpacity,
-  showIndicators = false,
+  showIndicators = false
 }: DogCardProps) => {
-  const [imageError, setImageError] = useState(false);
+  const [imageError, setImageError] = useState(false)
 
   const handleImageError = () => {
-    setImageError(true);
-    onImageError();
-  };
+    setImageError(true)
+    onImageError()
+  }
 
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden h-full flex flex-col cursor-grab active:cursor-grabbing">
       {/* Image Container */}
-      <div
-        className="relative h-[65%] sm:h-2/3 bg-gray-200"
-        onClick={onDetails}
-      >
+      <div className="relative h-[65%] sm:h-2/3 bg-gray-200" onClick={onDetails}>
         {/* Skeleton Loader */}
         {!imageLoaded && !imageError && (
           <div className="absolute inset-0 bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
@@ -79,24 +76,19 @@ const DogCard = ({
       </div>
 
       {/* Info Container */}
-      <div
-        className="flex-1 p-3 sm:p-6 cursor-pointer overflow-hidden"
-        onClick={onDetails}
-      >
+      <div className="flex-1 p-3 sm:p-6 cursor-pointer overflow-hidden" onClick={onDetails}>
         <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-800 mb-1 sm:mb-2 truncate">
           {dog.name}
         </h2>
         <p className="text-xs sm:text-sm text-gray-600 mb-1.5 sm:mb-3 line-clamp-1">
-          <span className="font-semibold">Bred for:</span>{" "}
-          {dog.bred_for || "Unknown"}
+          <span className="font-semibold">Bred for:</span> {dog.bred_for || "Unknown"}
         </p>
         <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
-          <span className="font-semibold">Temperament:</span>{" "}
-          {dog.temperament || "N/A"}
+          <span className="font-semibold">Temperament:</span> {dog.temperament || "N/A"}
         </p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default DogCard;
+export default DogCard
