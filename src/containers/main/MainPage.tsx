@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import type { TDirection } from "../../types/card";
 import type { TBreed } from "../../types/breed";
 import { fetchBreeds, voteBreed } from "../../apis/breed";
-import { storageService } from "../../services/storage";
+import { useProgressStore, useBreedsCache } from "../../stores/breedStore";
 import { useToast } from "../../contexts/ToastContext";
 import { TOAST_MESSAGES, ToastType } from "../../constants/toast";
 import DogCard from "../../components/DogCard";
@@ -30,6 +30,8 @@ const DogFinderMain = () => {
 
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { saveProgress, getProgress } = useProgressStore();
+  const { saveBreeds, getBreeds } = useBreedsCache();
 
   const currentBreed = breeds[currentIndex];
 
@@ -62,8 +64,8 @@ const DogFinderMain = () => {
   useEffect(() => {
     const loadInitialBreeds = async () => {
       // Try to restore from sessionStorage first (fastest, no API call)
-      const cachedData = storageService.getBreeds();
-      const savedProgress = storageService.getProgress();
+      const cachedData = getBreeds();
+      const savedProgress = getProgress();
 
       if (cachedData && savedProgress) {
         // Restore from cache without API call
@@ -123,28 +125,28 @@ const DogFinderMain = () => {
 
     loadInitialBreeds();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [getBreeds, getProgress]);
 
   // Save progress to localStorage whenever index or page changes
   useEffect(() => {
     if (!loading && breeds.length > 0 && currentBreed) {
-      storageService.saveProgress(currentBreed.id, page);
+      saveProgress(currentBreed.id, page);
     }
-  }, [currentIndex, page, loading, breeds.length, currentBreed]);
+  }, [currentIndex, page, loading, breeds.length, currentBreed, saveProgress]);
 
   // Save breeds data to sessionStorage whenever it changes
   useEffect(() => {
     if (!loading && breeds.length > 0) {
-      storageService.saveBreeds(breeds, page, hasMore);
+      saveBreeds(breeds, page, hasMore);
     }
-  }, [breeds, page, hasMore, loading]);
+  }, [breeds, page, hasMore, loading, saveBreeds]);
 
   // Prefetch next page when approaching end
   useEffect(() => {
     if (
       !loading &&
       hasMore &&
-      currentIndex >= breeds.length - 2 &&
+      currentIndex >= breeds.length - 3 &&
       breeds.length > 0
     ) {
       fetchMoreBreeds(page + 1);
