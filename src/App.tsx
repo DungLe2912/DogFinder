@@ -1,7 +1,13 @@
-import DogFinderMain from "./containers/main/MainPage";
+import { Outlet } from "react-router-dom";
+import Header from "./components/Header";
 
 const App = () => {
-  return <DogFinderMain />;
+  return (
+    <div>
+      <Header />
+      <Outlet />
+    </div>
+  );
 };
 
 export default App;

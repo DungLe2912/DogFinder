@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSpring, animated } from "@react-spring/web";
 import { useDrag } from "@use-gesture/react";
+import { useNavigate } from "react-router-dom";
 
 import type { TDirection } from "../../types/card";
 import type { TBreed } from "../../types/breed";
-import { fetchBreeds } from "../../apis/breed";
+import { fetchBreeds, voteBreed } from "../../apis/breed";
 import { storageService } from "../../services/storage";
-import Header from "../../components/Header";
-import ProgressIndicator from "../../components/ProgressIndicator";
 import DogCard from "../../components/DogCard";
 import ActionButtons from "../../components/ActionButtons";
 import EmptyState from "../../components/EmptyState";
@@ -27,6 +26,8 @@ const DogFinderMain = () => {
   const [page, setPage] = useState(0);
   const [isFetching, setIsFetching] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+
+  const navigate = useNavigate();
 
   const currentBreed = breeds[currentIndex];
 
@@ -170,22 +171,33 @@ const DogFinderMain = () => {
   };
 
   const handleReject = () => {
-    // API call with value = -1
+    // Fire-and-forget vote API in background
+    if (currentBreed?.reference_image_id) {
+      voteBreed(currentBreed.reference_image_id, -1).catch((error) =>
+        console.error("Failed to vote:", error)
+      );
+    }
     nextBreed();
   };
 
   const handleLike = () => {
-    // API call with value = 1
+    // Fire-and-forget vote API in background
+    if (currentBreed?.reference_image_id) {
+      voteBreed(currentBreed.reference_image_id, 1).catch((error) =>
+        console.error("Failed to vote:", error)
+      );
+    }
     nextBreed();
   };
 
   const handleSuperLike = () => {
-    // API call with value = 2
-    // nextBreed();
-  };
-
-  const handleDetails = () => {
-    // Navigate to details page
+    // Fire-and-forget vote API in background
+    if (currentBreed?.reference_image_id) {
+      voteBreed(currentBreed.reference_image_id, 2).catch((error) =>
+        console.error("Failed to vote:", error)
+      );
+    }
+    nextBreed();
   };
 
   const handleAction = (dir: TDirection, velocityX = 0, fromButton = false) => {
@@ -299,6 +311,12 @@ const DogFinderMain = () => {
     }
   );
 
+  const handleDetails = () => {
+    navigate(`/dogs/${currentBreed.id}`, {
+      state: { breed: currentBreed },
+    });
+  };
+
   // Calculate swipe indicators opacity
   const likeOpacity = x.to((val) => (val > 0 ? Math.min(val / 100, 1) : 0));
   const nopeOpacity = x.to((val) =>
@@ -310,10 +328,8 @@ const DogFinderMain = () => {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-purple-100 via-pink-100 to-blue-100 flex flex-col">
-      <Header />
-
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 sm:pt-0 lg:p-8 lg:pt-0">
+      <main className="flex-1 flex items-start justify-center p-3 sm:p-6 lg:p-8">
         <div className="w-125 max-w-2xl relative">
           {loading ? (
             <div className="flex items-center justify-center h-125 sm:h-150">
@@ -324,10 +340,8 @@ const DogFinderMain = () => {
             </div>
           ) : (
             <>
-              <ProgressIndicator current={currentIndex} total={breeds.length} />
-
               {/* Card Container */}
-              <div className="relative h-125 sm:h-150">
+              <div className="relative h-[85vh] max-h-150 sm:h-180 sm:max-h-175">
                 {/* Next Card (Background) */}
                 {currentIndex < breeds.length - 1 && (
                   <animated.div

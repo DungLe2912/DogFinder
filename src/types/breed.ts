@@ -26,4 +26,5 @@ export type TBreed = {
   height: THeight;
   weight: TWeight;
   image?: TImage;
+  reference_image_id: string;
 };

@@ -9,3 +9,8 @@ export const STORAGE_KEYS = {
   BREEDS_CACHE: "dogfinder_breeds_cache",
   BREEDS_PROGRESS: "dogfinder_progress",
 };
+
+export const SESSION_STORAGE_KEYS = {
+  BREEDS_DATA: "dogfinder_breeds_data",
+  BREEDS_META: "dogfinder_breeds_meta",
+};

@@ -15,3 +15,23 @@ export const fetchBreeds = async (
   });
   return response.data;
 };
+
+export const voteBreed = async (
+  imageId: string,
+  value: number
+): Promise<{ message: string }> => {
+  const response = await client.post<{ message: string }>(`/votes`, {
+    image_id: imageId,
+    value: value,
+  });
+  return response.data;
+};
+
+export const createFavorite = async (
+  imageId: string
+): Promise<{ id: number }> => {
+  const response = await client.post<{ id: number }>(`/favourites`, {
+    image_id: imageId,
+  });
+  return response.data;
+};
