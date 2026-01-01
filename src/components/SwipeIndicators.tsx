@@ -13,7 +13,7 @@ const SwipeIndicators = ({
   superLikeOpacity,
 }: SwipeIndicatorsProps) => {
   return (
-    <>
+    <div id="swipe-indicators">
       <animated.div
         className="absolute top-8 left-8 bg-red-500 text-white px-6 py-3 rounded-lg font-bold text-2xl rotate-[-20deg] border-4 border-red-500"
         style={{ opacity: nopeOpacity }}
@@ -34,7 +34,7 @@ const SwipeIndicators = ({
       >
         SUPER LIKE
       </animated.div>
-    </>
+    </div>
   );
 };
 

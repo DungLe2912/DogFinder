@@ -18,7 +18,7 @@ export type TImage = {
 export type TBreed = {
   id: number;
   name: string;
-  temperament: string;
+  temperament?: string;
   life_span: string;
   origin?: string;
   bred_for?: string;
