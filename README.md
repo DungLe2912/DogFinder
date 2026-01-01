@@ -62,12 +62,18 @@ DogFinder/
 │   │
 │   ├── components/           # Reusable components
 │   │   ├── ActionButtons.tsx # Like/Dislike/SuperLike buttons
+│   │   ├── BreedNotFound.tsx # Breed not found error component
 │   │   ├── DogCard.tsx       # Dog information card
 │   │   ├── EmptyState.tsx    # Empty state component
 │   │   ├── Header.tsx        # Header component
 │   │   ├── NoImage.tsx       # Image placeholder
+│   │   ├── PageLayout.tsx    # Reusable page layout wrapper
 │   │   ├── SwipeIndicators.tsx # Swipe indicators
 │   │   ├── Toast.tsx         # Toast notifications
+│   │   ├── history/          # History-related components
+│   │   │   ├── FilterTabs.tsx # Vote filter tabs
+│   │   │   ├── VoteCard.tsx  # Vote card component
+│   │   │   └── HistoryEmptyState.tsx # Empty state for history
 │   │   └── __tests__/        # Component tests
 │   │
 │   ├── config/               # Configuration files
@@ -76,13 +82,17 @@ DogFinder/
 │   │
 │   ├── constants/            # Constants and configuration
 │   │   ├── breeds.ts        # Breeds constants (MAX_X, MAX_Y, etc.)
+│   │   ├── history.ts       # History constants (filter types, vote values)
 │   │   └── toast.ts         # Toast messages and types
 │   │
 │   ├── containers/           # Page-level components
 │   │   ├── main/
 │   │   │   └── MainPage.tsx # Main page with swipe cards
 │   │   ├── details/
-│   │   │   └── DogDetailsPage.tsx # Dog breed details page
+│   │   │   ├── DogDetailsPage.tsx # Dog breed details page
+│   │   │   └── LoadingDetails.tsx # Loading state for details
+│   │   ├── history/
+│   │   │   └── HistoryPage.tsx # Vote history with filters
 │   │   └── not-found/
 │   │       └── NotFound.tsx  # 404 page
 │   │
@@ -192,6 +202,8 @@ I had considered using react-dnd, but its drag-and-drop effects weren't smooth o
 ## ✨ Features
 
 - 🐶 Swipe cards interaction (swipe left/right/up)
+- � Vote history page with filters (all/likes/dislikes/super likes)
+- ♾️ Infinite scroll for vote history
 - 💾 User progress persistence (zustand persist)
 - ⚡ Prefetching and caching for performance
 - 🎨 Responsive design with Tailwind CSS
@@ -200,5 +212,8 @@ I had considered using react-dnd, but its drag-and-drop effects weren't smooth o
 - 📱 Touch gestures support
 - 🔔 Toast notifications
 - 🚀 Fast refresh in development
+- 🐳 Docker support for production deployment
 
 ## Demo
+
+https://jam.dev/c/240797f1-fced-46c5-b0d7-85191f6a453c
