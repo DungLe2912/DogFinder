@@ -1,157 +1,149 @@
-import { useState, useEffect, useCallback } from "react";
-import { useSpring, animated } from "@react-spring/web";
-import { useDrag } from "@use-gesture/react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react"
+import { useSpring, animated } from "@react-spring/web"
+import { useDrag } from "@use-gesture/react"
+import { useNavigate } from "react-router-dom"
 
-import type { TDirection } from "../../types/card";
-import type { TBreed } from "../../types/breed";
-import { fetchBreeds, voteBreed } from "../../apis/breed";
-import { useProgressStore, useBreedsCache } from "../../stores/breedStore";
-import { useToast } from "../../contexts/ToastContext";
-import { TOAST_MESSAGES, ToastType } from "../../constants/toast";
-import DogCard from "../../components/DogCard";
-import ActionButtons from "../../components/ActionButtons";
-import EmptyState from "../../components/EmptyState";
-import { MAX_X, MAX_Y, MAX_PREFETCH } from "../../constants/breeds";
+import type { TDirection } from "../../types/card"
+import type { TBreed } from "../../types/breed"
+import { fetchBreeds, voteBreed } from "../../apis/breed"
+import { useProgressStore, useBreedsCache } from "../../stores/breedStore"
+import { useToast } from "../../contexts/ToastContext"
+import { TOAST_MESSAGES, ToastType } from "../../constants/toast"
+import DogCard from "../../components/DogCard"
+import ActionButtons from "../../components/ActionButtons"
+import EmptyState from "../../components/EmptyState"
+import { MAX_X, MAX_Y, MAX_PREFETCH } from "../../constants/breeds"
 
-import "../../App.css";
+import "../../App.css"
 
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(Math.max(value, min), max);
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
 
 const DogFinderMain = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [breeds, setBreeds] = useState<TBreed[]>([]);
-  const [page, setPage] = useState(0);
-  const [isFetching, setIsFetching] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [breeds, setBreeds] = useState<TBreed[]>([])
+  const [page, setPage] = useState(0)
+  const [isFetching, setIsFetching] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
 
-  const navigate = useNavigate();
-  const { showToast } = useToast();
-  const { saveProgress, getProgress } = useProgressStore();
-  const { saveBreeds, getBreeds } = useBreedsCache();
+  const navigate = useNavigate()
+  const { showToast } = useToast()
+  const { saveProgress, getProgress } = useProgressStore()
+  const { saveBreeds, getBreeds } = useBreedsCache()
 
-  const currentBreed = breeds[currentIndex];
+  const currentBreed = breeds[currentIndex]
 
   // Fetch breeds from API
   const fetchMoreBreeds = useCallback(
     async (pageNum: number) => {
-      if (isFetching || !hasMore) return;
+      if (isFetching || !hasMore) return
 
       try {
-        setIsFetching(true);
-        const data = await fetchBreeds({ page: pageNum, limit: MAX_PREFETCH });
+        setIsFetching(true)
+        const data = await fetchBreeds({ page: pageNum, limit: MAX_PREFETCH })
 
         if (data.length < MAX_PREFETCH) {
-          setHasMore(false);
+          setHasMore(false)
         }
 
-        const newBreeds = pageNum === 0 ? data : [...breeds, ...data];
-        setBreeds(newBreeds);
-        setPage(pageNum);
+        const newBreeds = pageNum === 0 ? data : [...breeds, ...data]
+        setBreeds(newBreeds)
+        setPage(pageNum)
       } catch (error) {
-        console.error("Failed to fetch breeds:", error);
+        console.error("Failed to fetch breeds:", error)
       } finally {
-        setIsFetching(false);
+        setIsFetching(false)
       }
     },
     [isFetching, hasMore, breeds]
-  );
+  )
 
   // Initial load with progress restoration
   useEffect(() => {
     const loadInitialBreeds = async () => {
       // Try to restore from sessionStorage first (fastest, no API call)
-      const cachedData = getBreeds();
-      const savedProgress = getProgress();
+      const cachedData = getBreeds()
+      const savedProgress = getProgress()
 
       if (cachedData && savedProgress) {
         // Restore from cache without API call
-        setBreeds(cachedData.breeds);
-        setPage(cachedData.page);
-        setHasMore(cachedData.hasMore);
+        setBreeds(cachedData.breeds)
+        setPage(cachedData.page)
+        setHasMore(cachedData.hasMore)
 
         // Find index by id
         const restoredIndex = cachedData.breeds.findIndex(
           (breed) => breed.id === savedProgress.currentId
-        );
-        setCurrentIndex(restoredIndex >= 0 ? restoredIndex : 0);
-        setLoading(false);
-        return;
+        )
+        setCurrentIndex(restoredIndex >= 0 ? restoredIndex : 0)
+        setLoading(false)
+        return
       }
 
       // If no cache, load from API
-      setLoading(true);
+      setLoading(true)
 
       if (savedProgress) {
         // Restore progress and fetch data from API
-        const targetPage = savedProgress.currentPage;
-        const totalLimit = MAX_PREFETCH * (targetPage + 1);
+        const targetPage = savedProgress.currentPage
+        const totalLimit = MAX_PREFETCH * (targetPage + 1)
 
         // Fetch all data in one call
         try {
-          setIsFetching(true);
-          const data = await fetchBreeds({ page: 0, limit: totalLimit });
+          setIsFetching(true)
+          const data = await fetchBreeds({ page: 0, limit: totalLimit })
 
-          setBreeds(data);
-          setPage(targetPage);
+          setBreeds(data)
+          setPage(targetPage)
 
           // Find index by id
-          const restoredIndex = data.findIndex(
-            (breed) => breed.id === savedProgress.currentId
-          );
-          setCurrentIndex(restoredIndex >= 0 ? restoredIndex : 0);
+          const restoredIndex = data.findIndex((breed) => breed.id === savedProgress.currentId)
+          setCurrentIndex(restoredIndex >= 0 ? restoredIndex : 0)
 
           if (data.length < totalLimit) {
-            setHasMore(false);
+            setHasMore(false)
           }
         } catch (error) {
-          console.error("Failed to restore progress:", error);
+          console.error("Failed to restore progress:", error)
           // Fallback to fresh start
-          await fetchMoreBreeds(0);
+          await fetchMoreBreeds(0)
         } finally {
-          setIsFetching(false);
+          setIsFetching(false)
         }
 
-        setLoading(false);
+        setLoading(false)
       } else {
         // Fresh start
-        await fetchMoreBreeds(0);
-        setLoading(false);
+        await fetchMoreBreeds(0)
+        setLoading(false)
       }
-    };
+    }
 
-    loadInitialBreeds();
+    loadInitialBreeds()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getBreeds, getProgress]);
+  }, [getBreeds, getProgress])
 
   // Save progress to localStorage whenever index or page changes
   useEffect(() => {
     if (!loading && breeds.length > 0 && currentBreed) {
-      saveProgress(currentBreed.id, page);
+      saveProgress(currentBreed.id, page)
     }
-  }, [currentIndex, page, loading, breeds.length, currentBreed, saveProgress]);
+  }, [currentIndex, page, loading, breeds.length, currentBreed, saveProgress])
 
   // Save breeds data to sessionStorage whenever it changes
   useEffect(() => {
     if (!loading && breeds.length > 0) {
-      saveBreeds(breeds, page, hasMore);
+      saveBreeds(breeds, page, hasMore)
     }
-  }, [breeds, page, hasMore, loading, saveBreeds]);
+  }, [breeds, page, hasMore, loading, saveBreeds])
 
   // Prefetch next page when approaching end
   useEffect(() => {
-    if (
-      !loading &&
-      hasMore &&
-      currentIndex >= breeds.length - 3 &&
-      breeds.length > 0
-    ) {
-      fetchMoreBreeds(page + 1);
+    if (!loading && hasMore && currentIndex >= breeds.length - 3 && breeds.length > 0) {
+      fetchMoreBreeds(page + 1)
     }
-  }, [currentIndex, breeds.length, loading, hasMore, page, fetchMoreBreeds]);
+  }, [currentIndex, breeds.length, loading, hasMore, page, fetchMoreBreeds])
 
   // Spring animation config
   const [{ x, y, rot, scale, opacity }, api] = useSpring(() => ({
@@ -160,90 +152,71 @@ const DogFinderMain = () => {
     rot: 0,
     scale: 1,
     opacity: 1,
-    config: { friction: 50, tension: 500, mass: 1 },
-  }));
+    config: { friction: 50, tension: 500, mass: 1 }
+  }))
 
   // Next card animation
-  const [nextCardProps, nextCardApi] = useSpring(() => ({
-    scale: 0.95,
+  const [nextCardProps] = useSpring(() => ({
     opacity: 0.5,
     y: 20,
-    config: { friction: 50, tension: 400 },
-  }));
+    config: { friction: 50, tension: 400 }
+  }))
 
   const nextBreed = () => {
-    setImageLoaded(false);
+    setImageLoaded(false)
 
-    // Animate next card coming in
-    nextCardApi.start({
-      scale: 1,
-      opacity: 1,
-      y: 0,
-      config: { friction: 40, tension: 300 },
-    });
-
-    setTimeout(() => {
-      if (currentIndex < breeds.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      } else {
-        setCurrentIndex(0);
-      }
-
-      // Reset next card to initial state instantly
-      nextCardApi.set({
-        scale: 0.95,
-        opacity: 0.5,
-        y: 20,
-      });
-    }, 100);
-  };
+    // Simply update index without animating next card
+    if (currentIndex < breeds.length - 1) {
+      setCurrentIndex(currentIndex + 1)
+    } else {
+      setCurrentIndex(0)
+    }
+  }
 
   const handleReject = () => {
     // Fire-and-forget vote API in background
     if (currentBreed?.reference_image_id) {
       voteBreed(currentBreed.reference_image_id, -1).catch((error) => {
-        console.error("Failed to vote:", error);
-        showToast(TOAST_MESSAGES.VOTE_ERROR, ToastType.ERROR);
-      });
+        console.error("Failed to vote:", error)
+        showToast(TOAST_MESSAGES.VOTE_ERROR, ToastType.ERROR)
+      })
     }
-    nextBreed();
-  };
+    nextBreed()
+  }
 
   const handleLike = () => {
     // Fire-and-forget vote API in background
     if (currentBreed?.reference_image_id) {
       voteBreed(currentBreed.reference_image_id, 1).catch((error) => {
-        console.error("Failed to vote:", error);
-        showToast(TOAST_MESSAGES.VOTE_ERROR, ToastType.ERROR);
-      });
+        console.error("Failed to vote:", error)
+        showToast(TOAST_MESSAGES.VOTE_ERROR, ToastType.ERROR)
+      })
     }
-    nextBreed();
-  };
+    nextBreed()
+  }
 
   const handleSuperLike = () => {
     // Fire-and-forget vote API in background
     if (currentBreed?.reference_image_id) {
       voteBreed(currentBreed.reference_image_id, 2).catch((error) => {
-        console.error("Failed to vote:", error);
-        showToast(TOAST_MESSAGES.VOTE_ERROR, ToastType.ERROR);
-      });
+        console.error("Failed to vote:", error)
+        showToast(TOAST_MESSAGES.VOTE_ERROR, ToastType.ERROR)
+      })
     }
-    nextBreed();
-  };
+    nextBreed()
+  }
 
   const handleAction = (dir: TDirection, velocityX = 0, fromButton = false) => {
-    const isGone = Math.abs(velocityX) > 0.05 || dir !== null;
-    const x =
-      (200 + window.innerWidth) *
-      (dir === "left" ? -1 : dir === "right" ? 1 : 0);
-    const y = dir === "up" ? -window.innerHeight : 0;
+    const isGone = Math.abs(velocityX) > 0.05 || dir !== null
+    const x = (200 + window.innerWidth) * (dir === "left" ? -1 : dir === "right" ? 1 : 0)
+    const y = dir === "up" ? -window.innerHeight : 0
 
     if (isGone) {
       if (fromButton) {
         // Call API logic
-        if (dir === "left") handleReject();
-        else if (dir === "right") handleLike();
-        else if (dir === "up") handleSuperLike();
+        if (dir === "left") handleReject()
+        else if (dir === "right") handleLike()
+        else if (dir === "up") handleSuperLike()
 
         // Reset spring IMMEDIATELY
         api.set({
@@ -251,10 +224,10 @@ const DogFinderMain = () => {
           y: 0,
           rot: 0,
           scale: 1,
-          opacity: 1,
-        });
+          opacity: 1
+        })
 
-        return;
+        return
       }
 
       api.start({
@@ -266,11 +239,11 @@ const DogFinderMain = () => {
         config: { friction: 30, tension: 400, mass: 0.8 },
         onRest: () => {
           if (dir === "left") {
-            handleReject();
+            handleReject()
           } else if (dir === "right") {
-            handleLike();
+            handleLike()
           } else if (dir === "up") {
-            handleSuperLike();
+            handleSuperLike()
           }
 
           // Reset card position instantly without animation
@@ -279,10 +252,10 @@ const DogFinderMain = () => {
             y: 0,
             rot: 0,
             scale: 1,
-            opacity: 1,
-          });
-        },
-      });
+            opacity: 1
+          })
+        }
+      })
     } else {
       api.start({
         x: 0,
@@ -290,40 +263,33 @@ const DogFinderMain = () => {
         rot: 0,
         scale: 1,
         opacity: 1,
-        config: { friction: 50, tension: 500 },
-      });
+        config: { friction: 50, tension: 500 }
+      })
     }
-  };
+  }
 
   // Drag gesture
   const bind = useDrag(
     ({ active, last, movement: [mx, my], velocity: [vx] }) => {
-      const clampedX = clamp(mx, -MAX_X, MAX_X);
-      const clampedY = clamp(my, -MAX_Y, MAX_Y);
+      const clampedX = clamp(mx, -MAX_X, MAX_X)
+      const clampedY = clamp(my, -MAX_Y, MAX_Y)
 
-      const trigger = Math.abs(mx) > 80 || Math.abs(my) > 80 || vx > 0.05;
+      const trigger = Math.abs(mx) > 80 || Math.abs(my) > 80 || vx > 0.05
 
       if (last) {
-        const dir =
-          Math.abs(mx) > Math.abs(my)
-            ? mx > 0
-              ? "right"
-              : "left"
-            : my < 0
-            ? "up"
-            : null;
+        const dir = Math.abs(mx) > Math.abs(my) ? (mx > 0 ? "right" : "left") : my < 0 ? "up" : null
 
         if (trigger && dir) {
-          handleAction(dir, vx);
+          handleAction(dir, vx)
         } else {
           api.start({
             x: 0,
             y: 0,
             rot: 0,
-            scale: 1,
-          });
+            scale: 1
+          })
         }
-        return;
+        return
       }
 
       api.start({
@@ -331,29 +297,25 @@ const DogFinderMain = () => {
         y: active ? clampedY : 0,
         rot: clampedX / 20,
         scale: active ? 1.03 : 1,
-        immediate: active,
-      });
+        immediate: active
+      })
     },
     {
       filterTaps: true,
-      rubberband: false,
+      rubberband: false
     }
-  );
+  )
 
   const handleDetails = () => {
     navigate(`/dogs/${currentBreed.id}`, {
-      state: { breed: currentBreed },
-    });
-  };
+      state: { breed: currentBreed }
+    })
+  }
 
   // Calculate swipe indicators opacity
-  const likeOpacity = x.to((val) => (val > 0 ? Math.min(val / 100, 1) : 0));
-  const nopeOpacity = x.to((val) =>
-    val < 0 ? Math.min(Math.abs(val) / 100, 1) : 0
-  );
-  const superLikeOpacity = y.to((val) =>
-    val < 0 ? Math.min(Math.abs(val) / 100, 1) : 0
-  );
+  const likeOpacity = x.to((val) => (val > 0 ? Math.min(val / 100, 1) : 0))
+  const nopeOpacity = x.to((val) => (val < 0 ? Math.min(Math.abs(val) / 100, 1) : 0))
+  const superLikeOpacity = y.to((val) => (val < 0 ? Math.min(Math.abs(val) / 100, 1) : 0))
 
   return (
     <div className="min-h-screen bg-linear-to-br from-purple-100 via-pink-100 to-blue-100 flex flex-col">
@@ -375,9 +337,8 @@ const DogFinderMain = () => {
                 {currentIndex < breeds.length - 1 && (
                   <animated.div
                     style={{
-                      scale: nextCardProps.scale,
                       opacity: nextCardProps.opacity,
-                      y: nextCardProps.y,
+                      y: nextCardProps.y
                     }}
                     className="absolute inset-0 will-change-transform pointer-events-none"
                   >
@@ -401,7 +362,7 @@ const DogFinderMain = () => {
                       rotate: rot.to((r) => `${r}deg`),
                       scale,
                       opacity,
-                      touchAction: "none",
+                      touchAction: "none"
                     }}
                     className="absolute inset-0 will-change-transform"
                   >
@@ -435,7 +396,7 @@ const DogFinderMain = () => {
         </div>
       </main>
     </div>
-  );
-};
+  )
+}
 
-export default DogFinderMain;
+export default DogFinderMain
