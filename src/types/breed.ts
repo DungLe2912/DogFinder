@@ -15,7 +15,7 @@ export type TImage = {
   url: string;
 };
 
-export type TDog = {
+export type TBreed = {
   id: number;
   name: string;
   temperament: string;
