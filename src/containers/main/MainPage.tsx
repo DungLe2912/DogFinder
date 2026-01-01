@@ -7,6 +7,8 @@ import type { TDirection } from "../../types/card";
 import type { TBreed } from "../../types/breed";
 import { fetchBreeds, voteBreed } from "../../apis/breed";
 import { storageService } from "../../services/storage";
+import { useToast } from "../../contexts/ToastContext";
+import { TOAST_MESSAGES, ToastType } from "../../constants/toast";
 import DogCard from "../../components/DogCard";
 import ActionButtons from "../../components/ActionButtons";
 import EmptyState from "../../components/EmptyState";
@@ -19,7 +21,6 @@ const clamp = (value: number, min: number, max: number) =>
 
 const DogFinderMain = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState<TDirection | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [breeds, setBreeds] = useState<TBreed[]>([]);
@@ -28,6 +29,7 @@ const DogFinderMain = () => {
   const [hasMore, setHasMore] = useState(true);
 
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const currentBreed = breeds[currentIndex];
 
@@ -59,10 +61,27 @@ const DogFinderMain = () => {
   // Initial load with progress restoration
   useEffect(() => {
     const loadInitialBreeds = async () => {
-      setLoading(true);
-
-      // Try to restore progress from localStorage
+      // Try to restore from sessionStorage first (fastest, no API call)
+      const cachedData = storageService.getBreeds();
       const savedProgress = storageService.getProgress();
+
+      if (cachedData && savedProgress) {
+        // Restore from cache without API call
+        setBreeds(cachedData.breeds);
+        setPage(cachedData.page);
+        setHasMore(cachedData.hasMore);
+
+        // Find index by id
+        const restoredIndex = cachedData.breeds.findIndex(
+          (breed) => breed.id === savedProgress.currentId
+        );
+        setCurrentIndex(restoredIndex >= 0 ? restoredIndex : 0);
+        setLoading(false);
+        return;
+      }
+
+      // If no cache, load from API
+      setLoading(true);
 
       if (savedProgress) {
         // Restore progress and fetch data from API
@@ -112,6 +131,13 @@ const DogFinderMain = () => {
       storageService.saveProgress(currentBreed.id, page);
     }
   }, [currentIndex, page, loading, breeds.length, currentBreed]);
+
+  // Save breeds data to sessionStorage whenever it changes
+  useEffect(() => {
+    if (!loading && breeds.length > 0) {
+      storageService.saveBreeds(breeds, page, hasMore);
+    }
+  }, [breeds, page, hasMore, loading]);
 
   // Prefetch next page when approaching end
   useEffect(() => {
@@ -173,9 +199,10 @@ const DogFinderMain = () => {
   const handleReject = () => {
     // Fire-and-forget vote API in background
     if (currentBreed?.reference_image_id) {
-      voteBreed(currentBreed.reference_image_id, -1).catch((error) =>
-        console.error("Failed to vote:", error)
-      );
+      voteBreed(currentBreed.reference_image_id, -1).catch((error) => {
+        console.error("Failed to vote:", error);
+        showToast(TOAST_MESSAGES.VOTE_ERROR, ToastType.ERROR);
+      });
     }
     nextBreed();
   };
@@ -183,9 +210,10 @@ const DogFinderMain = () => {
   const handleLike = () => {
     // Fire-and-forget vote API in background
     if (currentBreed?.reference_image_id) {
-      voteBreed(currentBreed.reference_image_id, 1).catch((error) =>
-        console.error("Failed to vote:", error)
-      );
+      voteBreed(currentBreed.reference_image_id, 1).catch((error) => {
+        console.error("Failed to vote:", error);
+        showToast(TOAST_MESSAGES.VOTE_ERROR, ToastType.ERROR);
+      });
     }
     nextBreed();
   };
@@ -193,15 +221,15 @@ const DogFinderMain = () => {
   const handleSuperLike = () => {
     // Fire-and-forget vote API in background
     if (currentBreed?.reference_image_id) {
-      voteBreed(currentBreed.reference_image_id, 2).catch((error) =>
-        console.error("Failed to vote:", error)
-      );
+      voteBreed(currentBreed.reference_image_id, 2).catch((error) => {
+        console.error("Failed to vote:", error);
+        showToast(TOAST_MESSAGES.VOTE_ERROR, ToastType.ERROR);
+      });
     }
     nextBreed();
   };
 
   const handleAction = (dir: TDirection, velocityX = 0, fromButton = false) => {
-    setDirection(dir);
     const isGone = Math.abs(velocityX) > 0.05 || dir !== null;
     const x =
       (200 + window.innerWidth) *
@@ -251,7 +279,6 @@ const DogFinderMain = () => {
             scale: 1,
             opacity: 1,
           });
-          setDirection(null);
         },
       });
     } else {

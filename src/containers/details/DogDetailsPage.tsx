@@ -4,10 +4,12 @@ import type { TBreed } from "../../types/breed";
 import NoImage from "../../components/NoImage";
 import { useState } from "react";
 import { createFavorite } from "../../apis/breed";
-
+import { useToast } from "../../contexts/ToastContext";
+import { TOAST_MESSAGES, ToastType } from "../../constants/toast";
 const DogDetailsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showToast } = useToast();
   const breed = location.state?.breed as TBreed | undefined;
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -23,10 +25,13 @@ const DogDetailsPage = () => {
     setIsFavorited(true);
 
     // Fire-and-forget API call in background
-    createFavorite(breed.reference_image_id).catch((error) => {
-      console.error("Failed to create favorite:", error);
-      setIsFavorited(false); // Revert on error
-    });
+    createFavorite(breed.reference_image_id)
+      .then(() => showToast(TOAST_MESSAGES.FAVORITE_SUCCESS, ToastType.SUCCESS))
+      .catch((error) => {
+        console.error("Failed to create favorite:", error);
+        showToast(TOAST_MESSAGES.FAVORITE_ERROR, ToastType.ERROR);
+        setIsFavorited(false); // Revert on error
+      });
   };
 
   if (!breed) {
