@@ -62,7 +62,6 @@ const DogFinderMain = () => {
   // Initial load with progress restoration
   useEffect(() => {
     const loadInitialBreeds = async () => {
-      // Try to restore from sessionStorage first (fastest, no API call)
       const cachedData = getBreeds()
       const savedProgress = getProgress()
 
@@ -124,14 +123,12 @@ const DogFinderMain = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getBreeds, getProgress])
 
-  // Save progress to localStorage whenever index or page changes
   useEffect(() => {
     if (!loading && breeds.length > 0 && currentBreed) {
       saveProgress(currentBreed.id, page)
     }
   }, [currentIndex, page, loading, breeds.length, currentBreed, saveProgress])
 
-  // Save breeds data to sessionStorage whenever it changes
   useEffect(() => {
     if (!loading && breeds.length > 0) {
       saveBreeds(breeds, page, hasMore)

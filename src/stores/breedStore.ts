@@ -17,20 +17,17 @@ interface BreedCache {
 }
 
 interface BreedStore {
-  // Progress state (localStorage)
   progress: BreedProgress | null
   saveProgress: (breedId: number, page: number) => void
   getProgress: () => BreedProgress | null
   clearProgress: () => void
 
-  // Breeds cache state (sessionStorage)
   cache: BreedCache | null
   saveBreeds: (breeds: TBreed[], page: number, hasMore: boolean) => void
   getBreeds: () => { breeds: TBreed[]; page: number; hasMore: boolean } | null
   clearBreeds: () => void
 }
 
-// Progress store with localStorage
 export const useProgressStore = create<
   Pick<BreedStore, "progress" | "saveProgress" | "getProgress" | "clearProgress">
 >()(
