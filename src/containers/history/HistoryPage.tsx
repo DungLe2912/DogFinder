@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 
@@ -13,23 +13,63 @@ const HistoryPage = () => {
   const navigate = useNavigate()
   const [votes, setVotes] = useState<TVote[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [page, setPage] = useState(0)
   const [filter, setFilter] = useState<FilterType>(FILTER_TYPES.ALL)
+  const observerTarget = useRef<HTMLDivElement>(null)
+
+  const loadVotes = useCallback(async (pageNum: number, append = false) => {
+    try {
+      if (append) {
+        setLoadingMore(true)
+      } else {
+        setLoading(true)
+      }
+
+      const data = await fetchVotes({ page: pageNum, limit: 100 })
+
+      if (data.length < 100) {
+        setHasMore(false)
+      }
+
+      setVotes((prev) => (append ? [...prev, ...data] : data))
+    } catch (error) {
+      console.error("Failed to fetch votes:", error)
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
+    }
+  }, [])
 
   useEffect(() => {
-    const loadVotes = async () => {
-      try {
-        setLoading(true)
-        const data = await fetchVotes({ limit: 100 })
-        setVotes(data)
-      } catch (error) {
-        console.error("Failed to fetch votes:", error)
-      } finally {
-        setLoading(false)
-      }
+    loadVotes(0)
+  }, [loadVotes])
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading && !loadingMore && hasMore) {
+          const nextPage = page + 1
+          setPage(nextPage)
+          loadVotes(nextPage, true)
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    const currentTarget = observerTarget.current
+    if (currentTarget) {
+      observer.observe(currentTarget)
     }
 
-    loadVotes()
-  }, [])
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget)
+      }
+    }
+  }, [loading, loadingMore, hasMore, page, loadVotes])
 
   const filteredVotes = votes.filter((vote) => {
     if (filter === FILTER_TYPES.ALL) return true
@@ -76,6 +116,26 @@ const HistoryPage = () => {
             {filteredVotes.map((vote) => (
               <VoteCard key={vote.id} vote={vote} />
             ))}
+          </div>
+        )}
+
+        {/* Infinite scroll trigger */}
+        {!loading && hasMore && <div ref={observerTarget} className="h-20" />}
+
+        {/* Loading more indicator */}
+        {loadingMore && (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-2 border-purple-200 border-t-purple-600"></div>
+              <p className="text-sm text-gray-500">Loading more...</p>
+            </div>
+          </div>
+        )}
+
+        {/* End of results */}
+        {!loading && !hasMore && votes.length > 0 && (
+          <div className="py-8 text-center">
+            <p className="text-sm text-gray-500">No more votes to load</p>
           </div>
         )}
       </main>
