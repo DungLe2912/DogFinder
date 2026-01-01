@@ -1,41 +1,38 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import type { TBreed } from "../types/breed";
-import { CACHE_EXPIRY } from "../constants/breeds";
+import { create } from "zustand"
+import { persist, createJSONStorage } from "zustand/middleware"
+import type { TBreed } from "../types/breed"
+import { CACHE_EXPIRY } from "../constants/breeds"
 
 interface BreedProgress {
-  currentId: number;
-  currentPage: number;
-  timestamp: number;
+  currentId: number
+  currentPage: number
+  timestamp: number
 }
 
 interface BreedCache {
-  breeds: TBreed[];
-  page: number;
-  hasMore: boolean;
-  timestamp: number;
+  breeds: TBreed[]
+  page: number
+  hasMore: boolean
+  timestamp: number
 }
 
 interface BreedStore {
   // Progress state (localStorage)
-  progress: BreedProgress | null;
-  saveProgress: (breedId: number, page: number) => void;
-  getProgress: () => BreedProgress | null;
-  clearProgress: () => void;
+  progress: BreedProgress | null
+  saveProgress: (breedId: number, page: number) => void
+  getProgress: () => BreedProgress | null
+  clearProgress: () => void
 
   // Breeds cache state (sessionStorage)
-  cache: BreedCache | null;
-  saveBreeds: (breeds: TBreed[], page: number, hasMore: boolean) => void;
-  getBreeds: () => { breeds: TBreed[]; page: number; hasMore: boolean } | null;
-  clearBreeds: () => void;
+  cache: BreedCache | null
+  saveBreeds: (breeds: TBreed[], page: number, hasMore: boolean) => void
+  getBreeds: () => { breeds: TBreed[]; page: number; hasMore: boolean } | null
+  clearBreeds: () => void
 }
 
 // Progress store with localStorage
 export const useProgressStore = create<
-  Pick<
-    BreedStore,
-    "progress" | "saveProgress" | "getProgress" | "clearProgress"
-  >
+  Pick<BreedStore, "progress" | "saveProgress" | "getProgress" | "clearProgress">
 >()(
   persist(
     (set, get) => ({
@@ -46,34 +43,34 @@ export const useProgressStore = create<
           progress: {
             currentId: breedId,
             currentPage: page,
-            timestamp: Date.now(),
-          },
-        });
+            timestamp: Date.now()
+          }
+        })
       },
 
       getProgress: () => {
-        const { progress } = get();
-        if (!progress) return null;
+        const { progress } = get()
+        if (!progress) return null
 
         // Check if cache is expired
         if (Date.now() - progress.timestamp > CACHE_EXPIRY) {
-          get().clearProgress();
-          return null;
+          get().clearProgress()
+          return null
         }
 
-        return progress;
+        return progress
       },
 
       clearProgress: () => {
-        set({ progress: null });
-      },
+        set({ progress: null })
+      }
     }),
     {
       name: "dogfinder-progress",
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => localStorage)
     }
   )
-);
+)
 
 // Breeds cache store with sessionStorage
 export const useBreedsCache = create<
@@ -84,40 +81,59 @@ export const useBreedsCache = create<
       cache: null,
 
       saveBreeds: (breeds: TBreed[], page: number, hasMore: boolean) => {
+        // Validate breeds data before saving
+        if (!Array.isArray(breeds) || breeds.length === 0) {
+          console.warn("Invalid breeds data, not saving to cache")
+          return
+        }
+
+        // Check if first item is a valid breed object
+        const firstBreed = breeds[0]
+        if (!firstBreed || typeof firstBreed !== "object" || !firstBreed.id || !firstBreed.name) {
+          console.warn("Invalid breed structure, not saving to cache")
+          return
+        }
+
         set({
           cache: {
             breeds,
             page,
             hasMore,
-            timestamp: Date.now(),
-          },
-        });
+            timestamp: Date.now()
+          }
+        })
       },
 
       getBreeds: () => {
-        const { cache } = get();
-        if (!cache) return null;
+        const { cache } = get()
+        if (!cache) return null
+
+        // Validate cache data structure
+        if (!cache.breeds || !Array.isArray(cache.breeds) || cache.breeds.length === 0) {
+          get().clearBreeds()
+          return null
+        }
 
         // Check if cache is expired
         if (Date.now() - cache.timestamp > CACHE_EXPIRY) {
-          get().clearBreeds();
-          return null;
+          get().clearBreeds()
+          return null
         }
 
         return {
           breeds: cache.breeds,
           page: cache.page,
-          hasMore: cache.hasMore,
-        };
+          hasMore: cache.hasMore
+        }
       },
 
       clearBreeds: () => {
-        set({ cache: null });
-      },
+        set({ cache: null })
+      }
     }),
     {
       name: "dogfinder-breeds",
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => sessionStorage)
     }
   )
-);
+)
